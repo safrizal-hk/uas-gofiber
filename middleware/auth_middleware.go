@@ -7,7 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/safrizal-hk/uas-gofiber/app/model"
+	"github.com/safrizal-hk/uas-gofiber/app/model/postgre"
 	"github.com/safrizal-hk/uas-gofiber/utils"
 )
 

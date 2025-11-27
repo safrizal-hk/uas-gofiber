@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/safrizal-hk/uas-gofiber/app/model"
+	"github.com/safrizal-hk/uas-gofiber/app/model/postgre"
 )
 
 type JWTClaims struct {

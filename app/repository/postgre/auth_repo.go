@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/safrizal-hk/uas-gofiber/app/model"
+	"github.com/safrizal-hk/uas-gofiber/app/model/postgre"
 )
 
 type AuthRepository interface {

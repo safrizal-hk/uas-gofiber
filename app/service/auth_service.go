@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/safrizal-hk/uas-gofiber/app/model"
-	"github.com/safrizal-hk/uas-gofiber/app/repository"
+	"github.com/safrizal-hk/uas-gofiber/app/model/postgre"
+	"github.com/safrizal-hk/uas-gofiber/app/repository/postgre"
 	"github.com/safrizal-hk/uas-gofiber/utils" 
 )
 
