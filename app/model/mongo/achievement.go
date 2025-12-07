@@ -19,7 +19,7 @@ type AchievementInput struct {
 // AchievementMongo: Dokumen di Database MongoDB
 type AchievementMongo struct {
 	ID              primitive.ObjectID     `bson:"_id,omitempty" json:"id"`
-	StudentID       string                 `bson:"studentId" json:"student_id"` // Referensi ke PG
+	StudentID       string                 `bson:"studentId" json:"student_id"`
 	AchievementType string                 `bson:"achievementType" json:"achievement_type"`
 	Title           string                 `bson:"title" json:"title"`
 	Description     string                 `bson:"description" json:"description"`

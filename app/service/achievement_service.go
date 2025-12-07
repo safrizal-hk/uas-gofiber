@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	// "fmt"
+	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -156,6 +158,10 @@ func (s *AchievementService) SubmitPrestasi(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Input prestasi tidak valid", "code": "400"})
 	}
 
+	if req.Attachments == nil {
+        req.Attachments = []modelMongo.Attachment{}
+	}
+	
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -366,40 +372,72 @@ func (s *AchievementService) AddAttachment(c *fiber.Ctx) error {
 	profile := middleware.GetUserProfileFromContext(c)
 	achievementID := c.Params("id")
 
+	// 1. Validasi Role
 	if profile.Role != "Mahasiswa" {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message": "Akses ditolak. Hanya Mahasiswa.", "code": "403"})
 	}
 
+	// 2. Cek Referensi di Postgres
 	ref, err := s.PgRepo.GetReferenceByID(achievementID)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"message": "Prestasi tidak ditemukan", "code": "404"})
 	}
 
-	studentID, err := s.PgRepo.FindStudentIdByUserID(profile.ID)
-	if err != nil || studentID == "" {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message": "Data mahasiswa tidak ditemukan.", "code": "403"})
+	// 3. Ambil File dari Form
+	file, err := c.FormFile("file") 
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"message": "Gagal mengambil file. Pastikan key adalah 'file'", "error": err.Error()})
 	}
+
+	// 4. Buat Folder & Simpan File
+	uploadDir := "./uploads"
+	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+		os.Mkdir(uploadDir, 0755)
+	}
+
+	filename := fmt.Sprintf("%d-%s", time.Now().Unix(), file.Filename)
+	savePath := filepath.Join(uploadDir, filename)
+
+	if err := c.SaveFile(file, savePath); err != nil {
+		return c.Status(500).JSON(fiber.Map{"message": "Gagal menyimpan file fisik", "error": err.Error()})
+	}
+
+	// 5. Generate URL & Struct
+	// Ganti localhost:3000 dengan domain/IP server jika di deploy
+	fileUrl := fmt.Sprintf("http://localhost:3000/uploads/%s", filename) 
 	
-	if ref.StudentID != studentID {
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"message": "Anda tidak memiliki akses ke prestasi ini.", "code": "403"})
+	attachment := modelMongo.Attachment{
+		FileName:   file.Filename,
+		FileUrl:    fileUrl,
+		FileType:   file.Header.Get("Content-Type"),
+		UploadedAt: time.Now(),
 	}
 
-	if ref.Status != modelPostgres.StatusDraft && ref.Status != modelPostgres.StatusRejected {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Tidak dapat mengubah lampiran pada prestasi yang sudah disubmit/diverifikasi", "code": "400"})
+	// ⚠️ PERBAIKAN 1: Cek Error Konversi ID
+	mongoID, err := primitive.ObjectIDFromHex(ref.MongoAchievementID)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"message": "Format MongoID di database PostgreSQL rusak/invalid", 
+			"detail": ref.MongoAchievementID,
+		})
 	}
 
-	var attachment modelMongo.Attachment
-	if err := c.BodyParser(&attachment); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "Data lampiran tidak valid", "code": "400"})
-	}
-	attachment.UploadedAt = time.Now()
-
-	mongoID, _ := primitive.ObjectIDFromHex(ref.MongoAchievementID)
+	// 6. Update MongoDB
 	err = s.MongoRepo.AddAttachment(context.Background(), mongoID, attachment)
 	
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"message": "Gagal menyimpan lampiran ke database", "code": "500"})
+		// ⚠️ PERBAIKAN 2: Tampilkan Error Asli untuk Debugging
+		fmt.Println("MONGO ERROR:", err) // Print ke terminal
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Gagal menyimpan lampiran ke database", 
+			"error": err.Error(), // Kirim pesan error asli ke client
+			"code": "500",
+		})
 	}
 	
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"status": "success", "message": "Lampiran berhasil ditambahkan"})
-}	
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success", 
+		"message": "Lampiran berhasil ditambahkan",
+		"data": attachment,
+	})
+}

@@ -1,0 +1,21 @@
+basePath: /api/v1
+host: localhost:3000
+info:
+  contact:
+    email: admin@univ.ac.id
+    name: Safrizal Huda
+  description: 'Dokumentasi API untuk UAS Backend Lanjut (Hybrid Database: PostgreSQL
+    & MongoDB).'
+  termsOfService: http://swagger.io/terms/
+  title: Sistem Pelaporan Prestasi Mahasiswa API
+  version: "1.0"
+paths: {}
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    description: 'Masukkan token dengan format: "Bearer <token>"'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

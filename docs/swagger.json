@@ -1,0 +1,27 @@
+{
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "Dokumentasi API untuk UAS Backend Lanjut (Hybrid Database: PostgreSQL \u0026 MongoDB).",
+        "title": "Sistem Pelaporan Prestasi Mahasiswa API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Safrizal Huda",
+            "email": "admin@univ.ac.id"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:3000",
+    "basePath": "/api/v1",
+    "paths": {},
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Masukkan token dengan format: \"Bearer \u003ctoken\u003e\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

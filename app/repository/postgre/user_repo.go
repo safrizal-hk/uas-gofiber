@@ -128,7 +128,7 @@ func (r *adminManageUsersRepositoryImpl) GetUserByID(userID string) (*model_post
 
 func (r *adminManageUsersRepositoryImpl) ListAllUsers() ([]model_postgre.User, error) {
 	query := `
-		SELECT u.id, u.username, u.email, u.full_name, r.name AS role_name, u.is_active, u.created_at
+		SELECT u.id, u.username, u.email, u.full_name, u.role_id, r.name AS role_name, u.is_active, u.created_at
 		FROM users u
 		JOIN roles r ON u.role_id = r.id
 		WHERE u.is_active = TRUE
@@ -142,7 +142,7 @@ func (r *adminManageUsersRepositoryImpl) ListAllUsers() ([]model_postgre.User, e
 	for rows.Next() {
 		var user model_postgre.User
 		err := rows.Scan(
-			&user.ID, &user.Username, &user.Email, &user.FullName, &user.RoleName, &user.IsActive, &user.CreatedAt,
+			&user.ID, &user.Username, &user.Email, &user.FullName, &user.RoleID, &user.RoleName, &user.IsActive, &user.CreatedAt,
 		)
 		if err != nil { return nil, err }
 		users = append(users, user)
